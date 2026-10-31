@@ -130,8 +130,10 @@ strong {
   border-radius: 9px;
   color: #687167;
 }
-.icon-button:hover {
-  background: #edf0e9;
+@media (hover: hover) and (pointer: fine) {
+  .icon-button:hover {
+    background: #edf0e9;
+  }
 }
 .button {
   display: inline-flex;
@@ -146,24 +148,30 @@ strong {
   line-height: 1.4;
   white-space: nowrap;
 }
-.button:hover {
-  transform: translateY(-1px);
+@media (hover: hover) and (pointer: fine) {
+  .button:hover {
+    transform: translateY(-1px);
+  }
 }
 .button.primary {
   color: #fff;
   background: var(--green);
 }
-.button.primary:hover {
-  background: #1c3a2b;
-  box-shadow: 0 3px 9px #203d3015;
+@media (hover: hover) and (pointer: fine) {
+  .button.primary:hover {
+    background: #1c3a2b;
+    box-shadow: 0 3px 9px #203d3015;
+  }
 }
 .button.light {
   background: #f5f6f1;
   border: 1px solid var(--border);
   color: #4e5e4e;
 }
-.button.light:hover {
-  background: #e9eee5;
+@media (hover: hover) and (pointer: fine) {
+  .button.light:hover {
+    background: #e9eee5;
+  }
 }
 .button.full {
   width: 100%;
@@ -184,8 +192,10 @@ strong {
   font-weight: 650;
   padding: 5px 0;
 }
-.text-button:hover {
-  color: #648363;
+@media (hover: hover) and (pointer: fine) {
+  .text-button:hover {
+    color: #648363;
+  }
 }
 .brand {
   display: inline-flex;
@@ -254,9 +264,11 @@ strong {
   font-size: 12px;
   font-weight: 550;
 }
-.nav-item:hover {
-  background: #f5f7f1;
-  color: #2b503f;
+@media (hover: hover) and (pointer: fine) {
+  .nav-item:hover {
+    background: #f5f7f1;
+    color: #2b503f;
+  }
 }
 .nav-item.active {
   background: #edf2e8;
@@ -328,8 +340,10 @@ strong {
   padding: 18px 15px;
   text-align: left;
 }
-.sidebar-note:hover {
-  background: #eef1e4;
+@media (hover: hover) and (pointer: fine) {
+  .sidebar-note:hover {
+    background: #eef1e4;
+  }
 }
 .sidebar-note-icon {
   color: #718467;
@@ -617,8 +631,10 @@ main {
   border-radius: 20px;
   white-space: nowrap;
 }
-.preview-pill:hover {
-  background: #e5eadb;
+@media (hover: hover) and (pointer: fine) {
+  .preview-pill:hover {
+    background: #e5eadb;
+  }
 }
 .preview-pill > span {
   width: 4px;
@@ -711,8 +727,10 @@ main {
   margin-top: 20px;
   gap: 12px;
 }
-.hero-button:hover {
-  background: #eaf0ca;
+@media (hover: hover) and (pointer: fine) {
+  .hero-button:hover {
+    background: #eaf0ca;
+  }
 }
 .hero-footnote {
   display: flex;
@@ -846,8 +864,10 @@ main {
   text-decoration-color: #d9dfcf;
   text-underline-offset: 3px;
 }
-.rail-link:hover {
-  color: var(--green);
+@media (hover: hover) and (pointer: fine) {
+  .rail-link:hover {
+    color: var(--green);
+  }
 }
 .intention-setting {
   border-top: 1px solid #edf0e8;
@@ -884,8 +904,10 @@ main {
   background: #f1f4e9;
   color: #667851;
 }
-.intention-options button:hover {
-  background: #f1f4e9;
+@media (hover: hover) and (pointer: fine) {
+  .intention-options button:hover {
+    background: #f1f4e9;
+  }
 }
 .rail-section-heading {
   display: flex;
@@ -944,8 +966,10 @@ main {
 .person-row > svg {
   color: #9ba78a;
 }
-.person-row:hover strong {
-  color: #65845e;
+@media (hover: hover) and (pointer: fine) {
+  .person-row:hover strong {
+    color: #65845e;
+  }
 }
 .avatar-wrap {
   display: inline-flex;
@@ -981,8 +1005,10 @@ main {
   margin-top: 21px;
   font-weight: 600;
 }
-.people-more:hover {
-  color: var(--green);
+@media (hover: hover) and (pointer: fine) {
+  .people-more:hover {
+    color: var(--green);
+  }
 }
 .sample-note {
   display: block;
@@ -1043,8 +1069,10 @@ main {
   margin-top: 17px;
   padding: 0;
 }
-.safety-card > button:hover {
-  gap: 23px;
+@media (hover: hover) and (pointer: fine) {
+  .safety-card > button:hover {
+    gap: 23px;
+  }
 }
 .safety-bottom {
   display: flex;
@@ -1153,9 +1181,11 @@ main {
     box-shadow 0.2s,
     transform 0.2s;
 }
-.dare-card:hover {
-  box-shadow: 0 5px 20px #5c66590b;
-  transform: translateY(-2px);
+@media (hover: hover) and (pointer: fine) {
+  .dare-card:hover {
+    box-shadow: 0 5px 20px #5c66590b;
+    transform: translateY(-2px);
+  }
 }
 .dare-art {
   height: 133px;
@@ -1283,9 +1313,11 @@ main {
 .lavender .dare-button {
   color: #93859f;
 }
-.dare-button:hover {
-  padding-left: 4px;
-  padding-right: 4px;
+@media (hover: hover) and (pointer: fine) {
+  .dare-button:hover {
+    padding-left: 4px;
+    padding-right: 4px;
+  }
 }
 .daily-footnote {
   display: flex;
@@ -1426,8 +1458,10 @@ main {
   color: #aab19b;
   margin-top: 4px;
 }
-.post-author:hover strong {
-  color: #789169;
+@media (hover: hover) and (pointer: fine) {
+  .post-author:hover strong {
+    color: #789169;
+  }
 }
 .more-button {
   font-size: 17px;
@@ -1462,8 +1496,10 @@ main {
   border-radius: 6px;
   color: #6f7a65;
 }
-.post-menu > button:hover {
-  background: #f2f5ec;
+@media (hover: hover) and (pointer: fine) {
+  .post-menu > button:hover {
+    background: #f2f5ec;
+  }
 }
 .menu-dismiss {
   position: fixed;
@@ -1485,8 +1521,10 @@ main {
   transition: transform 0.5s;
   filter: sepia(0.06);
 }
-.post-image-button:hover .post-image {
-  transform: scale(1.035);
+@media (hover: hover) and (pointer: fine) {
+  .post-image-button:hover .post-image {
+    transform: scale(1.035);
+  }
 }
 .post-dare-label {
   position: absolute;
@@ -1520,8 +1558,10 @@ main {
   padding: 0;
   min-height: 22px;
 }
-.post-actions > button:hover {
-  color: #4c6f45;
+@media (hover: hover) and (pointer: fine) {
+  .post-actions > button:hover {
+    color: #4c6f45;
+  }
 }
 .post-actions .liked {
   color: #bc7e70;
@@ -1551,8 +1591,10 @@ main {
   padding: 0;
   margin-top: 9px;
 }
-.post-comment-link:hover {
-  color: #6d835b;
+@media (hover: hover) and (pointer: fine) {
+  .post-comment-link:hover {
+    color: #6d835b;
+  }
 }
 .end-note {
   display: flex;
@@ -1606,8 +1648,10 @@ main {
   font-size: 6px;
   color: #a5ad97;
 }
-.page-footer button:hover {
-  color: var(--green);
+@media (hover: hover) and (pointer: fine) {
+  .page-footer button:hover {
+    color: var(--green);
+  }
 }
 .page-footer > div > svg {
   color: #b9bea9;
@@ -1702,8 +1746,10 @@ main {
   font-size: 10px;
   margin-top: 24px;
 }
-.safety-strip:hover {
-  background: #e8efde;
+@media (hover: hover) and (pointer: fine) {
+  .safety-strip:hover {
+    background: #e8efde;
+  }
 }
 .info-card {
   background: #fff;
@@ -2084,8 +2130,10 @@ main {
   font-size: 8px;
   padding: 6px 9px;
 }
-.quick-messages > button:hover {
-  background: #f0f4e7;
+@media (hover: hover) and (pointer: fine) {
+  .quick-messages > button:hover {
+    background: #f0f4e7;
+  }
 }
 .chat-input {
   display: flex;
@@ -2119,8 +2167,10 @@ main {
   align-items: center;
   justify-content: center;
 }
-.send-button:hover {
-  background: #52734d;
+@media (hover: hover) and (pointer: fine) {
+  .send-button:hover {
+    background: #52734d;
+  }
 }
 .chat-complete {
   text-align: center;
@@ -2133,8 +2183,10 @@ main {
   gap: 5px;
   color: #97a780;
 }
-.chat-complete button:hover {
-  color: var(--green);
+@media (hover: hover) and (pointer: fine) {
+  .chat-complete button:hover {
+    color: var(--green);
+  }
 }
 .completed-chat {
   display: flex;
@@ -2350,9 +2402,11 @@ main {
 .settings-nav a > svg:last-child {
   margin-left: auto;
 }
-.settings-nav a:hover {
-  background: #f2f6e9;
-  color: #657e51;
+@media (hover: hover) and (pointer: fine) {
+  .settings-nav a:hover {
+    background: #f2f6e9;
+    color: #657e51;
+  }
 }
 .settings-note {
   padding: 22px 15px;
@@ -2758,8 +2812,10 @@ main {
   color: #9caf87;
   cursor: pointer;
 }
-.upload-zone:hover {
-  background: #edf4e2;
+@media (hover: hover) and (pointer: fine) {
+  .upload-zone:hover {
+    background: #edf4e2;
+  }
 }
 .upload-zone strong {
   font-size: 11px;
@@ -3179,8 +3235,10 @@ main {
   color: #a9b398;
   font-size: 9px;
 }
-.profile-safety-actions > button:hover {
-  color: #718d57;
+@media (hover: hover) and (pointer: fine) {
+  .profile-safety-actions > button:hover {
+    color: #718d57;
+  }
 }
 .verification-emblem {
   display: flex;

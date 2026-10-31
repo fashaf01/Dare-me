@@ -34,7 +34,7 @@ try {
     tree,
     ...(parent ? ["-p", parent] : []),
     "-m",
-    "Publish no-login Dareme demo",
+    "Publish simplified Dareme mobile PWA",
   ]);
   git(["push", "origin", `${commit}:refs/heads/gh-pages`], {
     stdio: ["ignore", "pipe", "inherit"],

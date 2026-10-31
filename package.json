@@ -12,6 +12,7 @@
     "start": "NODE_ENV=production node server/index.mjs",
     "test": "node --test tests/*.test.mjs",
     "test:ui": "python3 tests/ui_smoke.py",
+    "test:pwa": "python3 tests/mobile_pwa.py",
     "format": "prettier --write src server tests/api.test.mjs vite.config.ts index.html package.json tsconfig.json README.md",
     "build:demo": "tsc -b && vite build --mode demo",
     "preview:demo": "vite preview --mode demo --host 0.0.0.0 --port 4173",

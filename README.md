@@ -1,10 +1,10 @@
 # Dareme
 
-A first working web app for thoughtful daily dares, friendship, and dating. Built with React, TypeScript, Vite, Express, and SQLite, with a responsive desktop and mobile interface.
+A mobile-first PWA for daily dares, friendship, and dating. Four simple tabs—Dares, Feed, Chats, and Profile—keep the app focused. Built with React, TypeScript, Vite, Express, and SQLite.
 
 ## No-login GitHub Pages demo
 
-The `demo` build opens straight into a fictional sample account. It needs no login, backend, Railway account, API keys, or database server. Dares, sample chat, posts, filters, privacy controls, likes, comments, and reports work locally in the browser. Nothing is sent to another person or a server. Reset sample content using **No-login demo → Reset the demo**. Browser storage may be cleared by the browser; it is not a real account or a safety service.
+The `demo` build opens straight into a fictional sample account. It needs no login, backend, Railway account, API keys, or database server. Dares, sample chat, posts, filters, privacy controls, likes, comments, and reports work locally in the browser. Nothing is sent to another person or a server. Reset sample content using **Sample account → About this demo → Reset the demo**. Browser storage may be cleared by the browser; it is not a real account or a safety service.
 
 ```sh
 npm ci
@@ -96,3 +96,13 @@ Private access controls cannot prevent a recipient from taking a screenshot. Cha
 ## Assets
 
 The interface illustrations are original inline SVGs. Demo photos come from Start Bootstrap’s [Agency](https://github.com/StartBootstrap/startbootstrap-agency), [Grayscale](https://github.com/StartBootstrap/startbootstrap-grayscale), and [Creative](https://github.com/StartBootstrap/startbootstrap-creative) example themes; see `public/images/SOURCE.md`. Fonts are Manrope and Instrument Serif from Google Fonts, licensed under the SIL Open Font License, included with the font files.
+
+## Mobile PWA
+
+The app now uses four persistent tabs: **Dares**, **Feed**, **Chats**, and **Profile**. Matching, privacy, and account settings live under Profile → Preferences. The app keeps the existing account, consent, chat, and privacy behavior.
+
+Serve either build over HTTPS (localhost also works) to enable the PWA. On iPhone, use Safari → Share → Add to Home Screen. On Android, use Chrome → Install app / Add to Home screen. The manifest, standalone display, safe-area layout, and app icons are included. A service worker caches public app resources after a successful visit. The sample demo works offline after loading; real accounts, matching, uploads, and chat still need a server connection. Private API responses and uploads are never placed in the service-worker cache.
+
+Use **Profile → Get the app** for installation instructions or the browser’s native install prompt.
+
+Run `npm run test:pwa` against `npm run preview:demo` for mobile navigation, consent, chat, posting, layout, and offline demo checks. Real-device installation, keyboard behavior, and touch feel still need testing on iOS and Android.

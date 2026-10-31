@@ -6,35 +6,32 @@ import {
   Bell,
   Bookmark,
   Check,
-  ChevronDown,
   ChevronRight,
   Compass,
   Flag,
   Heart,
   ImagePlus,
   LockKeyhole,
-  Menu,
+  UserRound,
   MessageCircle,
   Plus,
   Search,
   Settings,
   Shield,
   ShieldCheck,
-  Sparkles,
   Users,
   X,
   Zap,
 } from "lucide-react";
 import { api, send } from "./api";
 import { DEMO_ONLY } from "./config";
+import { InstallDialog, useAppInstall } from "./install";
 import {
   Avatar,
   Brand,
   DareArt,
   EmptyState,
-  HeroArt,
   Modal,
-  Toggle,
   Verified,
 } from "./components";
 import {
@@ -65,6 +62,7 @@ export type Dialog =
         | "verification"
         | "notifications"
         | "people"
+        | "install"
         | "demo-info";
     }
   | { kind: "dare"; dare: Dare }
@@ -83,16 +81,27 @@ export type AppActions = {
   ) => Promise<boolean>;
 };
 const nav = [
-  { name: "Explore" as Page, icon: Compass },
-  { name: "My dares" as Page, icon: Zap },
-  { name: "Messages" as Page, icon: MessageCircle },
-  { name: "Community" as Page, icon: Users },
+  { name: "Explore" as Page, label: "Dares", icon: Zap },
+  { name: "Community" as Page, label: "Feed", icon: Compass },
+  { name: "Messages" as Page, label: "Chats", icon: MessageCircle },
+  { name: "My profile" as Page, label: "Profile", icon: UserRound },
 ];
-const secondary = [
-  { name: "My profile" as Page, icon: Users },
-  { name: "Settings" as Page, icon: Settings },
-  { name: "Safety center" as Page, icon: ShieldCheck },
-];
+const pagePaths: Record<Page, string> = {
+  Explore: "dares",
+  "My dares": "dares",
+  Community: "feed",
+  Messages: "chats",
+  "My profile": "profile",
+  Settings: "settings",
+  "Safety center": "safety",
+};
+function pageFromHash(): Page {
+  return (
+    (Object.entries(pagePaths).find(
+      ([, path]) => path === window.location.hash.slice(1),
+    )?.[0] as Page) || "Explore"
+  );
+}
 let bootPromise: Promise<AppState> | undefined;
 function boot() {
   return (bootPromise ||= send("/demo").then(() => api<AppState>("/state")));
@@ -100,15 +109,25 @@ function boot() {
 
 export default function App() {
   const [state, setState] = useState<AppState | null>(null);
-  const [page, setPage] = useState<Page>("Explore");
+  const [page, setPage] = useState<Page>(pageFromHash);
   const [dialog, setDialog] = useState<Dialog | null>(null);
   const [toast, setToast] = useState("");
   const [error, setError] = useState("");
   const [search, setSearch] = useState("");
-  const [mobileMenu, setMobileMenu] = useState(false);
   const [feedTab, setFeedTab] = useState("For you");
   const [selectedChat, setSelectedChat] = useState<string | null>(null);
   const [saved, setSaved] = useState<string[]>([]);
+  const install = useAppInstall();
+  useEffect(() => {
+    const restorePage = () => {
+      setPage(pageFromHash());
+      setDialog(null);
+      setSearch("");
+      window.scrollTo({ top: 0, behavior: "instant" });
+    };
+    window.addEventListener("hashchange", restorePage);
+    return () => window.removeEventListener("hashchange", restorePage);
+  }, []);
   useEffect(() => {
     let mounted = true;
     boot()
@@ -151,10 +170,11 @@ export default function App() {
   }, [state?.user.id]);
   const close = useCallback(() => setDialog(null), []);
   const navigate = (next: Page) => {
+    const hash = `#${pagePaths[next]}`;
+    if (window.location.hash !== hash) window.history.pushState(null, "", hash);
     setPage(next);
     setSearch("");
-    setMobileMenu(false);
-    window.scrollTo({ top: 0, behavior: "smooth" });
+    window.scrollTo({ top: 0, behavior: "instant" });
   };
   const act = async (operation: () => Promise<unknown>, success?: string) => {
     try {
@@ -173,8 +193,14 @@ export default function App() {
         <Brand />
         {error ? (
           <>
-            <h2>Let’s try that again.</h2>
-            <p>{error}</p>
+            <h2>
+              {navigator.onLine ? "Let’s try that again." : "You’re offline"}
+            </h2>
+            <p>
+              {navigator.onLine
+                ? error
+                : "Reconnect to load your account and chats, then try again."}
+            </p>
             <button
               className="button primary"
               onClick={() => {
@@ -188,7 +214,7 @@ export default function App() {
         ) : (
           <>
             <span className="loader" />
-            <p>Making room for something good…</p>
+            <p>Opening Dareme…</p>
           </>
         )}
       </div>
@@ -213,7 +239,17 @@ export default function App() {
       ? saved.filter((id) => id !== post.id)
       : [...saved, post.id];
     setSaved(next);
-    localStorage.setItem(`dareme-saved-${state.user.id}`, JSON.stringify(next));
+    try {
+      localStorage.setItem(
+        `dareme-saved-${state.user.id}`,
+        JSON.stringify(next),
+      );
+    } catch {
+      notify(
+        "Browser storage is unavailable. Saved posts will stay in this tab.",
+      );
+      return;
+    }
     notify(
       next.includes(post.id)
         ? "Saved to your collection on this device."
@@ -257,377 +293,182 @@ export default function App() {
   };
   return (
     <>
-      <aside className={`sidebar ${mobileMenu ? "is-open" : ""}`}>
-        <button
-          className="brand-button"
-          aria-label="Dareme home"
-          onClick={() => navigate("Explore")}
-        >
-          <Brand />
-        </button>
-        <p className="brand-tagline">Good things start with a little dare.</p>
-        <nav className="main-nav" aria-label="Main navigation">
-          {nav.map(({ name, icon: Icon }) => (
-            <button
-              key={name}
-              className={`nav-item ${page === name ? "active" : ""}`}
-              aria-current={page === name ? "page" : undefined}
-              onClick={() => navigate(name)}
-            >
-              <Icon size={20} />
-              <span>{name}</span>
-              {name === "My dares" && <span className="nav-count">2</span>}
-              {name === "Messages" && active > 0 && (
-                <span className="nav-dot" />
-              )}
-            </button>
-          ))}
-        </nav>
-        <span className="nav-section-label">YOUR SPACE</span>
-        <nav className="secondary-nav" aria-label="Your account">
-          {secondary.map(({ name, icon: Icon }) => (
-            <button
-              key={name}
-              className={`nav-item ${page === name ? "active" : ""}`}
-              aria-current={page === name ? "page" : undefined}
-              onClick={() => navigate(name)}
-            >
-              <Icon size={19} />
-              <span>{name}</span>
-              {name === "Safety center" && <span className="tiny-green-dot" />}
-            </button>
-          ))}
-        </nav>
-        <div className="sidebar-bottom">
-          <button
-            className="sidebar-note"
-            onClick={() => navigate("Safety center")}
-          >
-            <span className="sidebar-note-icon">
-              <ShieldCheck size={21} />
-            </span>
-            <strong>A safer kind of social.</strong>
-            <span>
-              Your comfort comes first.
-              <br />
-              We’re here to keep it that way.
-            </span>
-            <span className="text-link">
-              Our safety promise <ArrowUpRight size={14} />
-            </span>
-          </button>
-          <button
-            className="account-card"
-            onClick={() => navigate("My profile")}
-          >
-            <Avatar user={state.user} />
-            <span>
-              <strong>{state.user.name}</strong>
-              <small>
-                {state.user.private ? (
-                  <>
-                    <LockKeyhole size={11} />
-                    Private profile
-                  </>
-                ) : (
-                  "Public profile"
-                )}
-              </small>
-            </span>
-            <ChevronDown size={16} />
-          </button>
-          <div className="sidebar-footer">
-            A little courage. A real connection.
-            <span>© {new Date().getFullYear()} Dareme</span>
-          </div>
-        </div>
-      </aside>
-      {mobileMenu && (
-        <button
-          className="mobile-backdrop"
-          aria-label="Close navigation"
-          onClick={() => setMobileMenu(false)}
-        />
-      )}
       <div className="app-shell">
-        <header className="topbar">
-          <div className="topbar-left">
+        <header className="app-header">
+          <button
+            className="brand-button"
+            aria-label="Dareme home"
+            onClick={() => navigate("Explore")}
+          >
+            <Brand />
+          </button>
+          <div className="header-actions">
             <button
-              className="icon-button mobile-menu"
-              aria-label="Open navigation"
-              onClick={() => setMobileMenu(!mobileMenu)}
-            >
-              <Menu size={21} />
-            </button>
-            <span className="breadcrumb">
-              Your space <ChevronRight size={14} />
-              <strong>{page}</strong>
-            </span>
-          </div>
-          <div className="topbar-tools">
-            <div className="search-field">
-              <Search size={17} />
-              <input
-                aria-label="Search community"
-                placeholder="Find a little inspiration..."
-                value={search}
-                onChange={(e) => {
-                  setSearch(e.target.value);
-                  if (page !== "Explore" && page !== "Community")
-                    setPage("Community");
-                }}
-              />
-              {search && (
-                <button
-                  className="icon-button"
-                  aria-label="Clear search"
-                  onClick={() => setSearch("")}
-                >
-                  <X size={14} />
-                </button>
-              )}
-              <span className="search-shortcut">⌕</span>
-            </div>
-            <button
-              className="icon-button notification-button"
-              aria-label={`Notifications${pending ? `, ${pending} unread` : ""}`}
+              className="icon-button"
+              aria-label="Notifications"
               onClick={() => setDialog({ kind: "notifications" })}
             >
-              <Bell size={20} />
+              <Bell size={23} />
               {pending > 0 && (
                 <span className="notification-badge">{pending}</span>
               )}
             </button>
-            <span className="toolbar-divider" />
-            <button
-              className="button primary create-button"
-              onClick={() => setDialog({ kind: "new-post" })}
-            >
-              <Plus size={17} />
-              <span>Create a post</span>
-            </button>
+            {page === "My profile" && (
+              <button
+                className="icon-button"
+                aria-label="Settings"
+                onClick={() => navigate("Settings")}
+              >
+                <Settings size={23} />
+              </button>
+            )}
           </div>
         </header>
-        <main>
-          <div className="page-heading">
+        <main id="main-content">
+          {state.user.demo && (
+            <button
+              className="demo-label"
+              onClick={() =>
+                setDialog({ kind: DEMO_ONLY ? "demo-info" : "auth" })
+              }
+            >
+              Sample account ·{" "}
+              {DEMO_ONLY ? "About this demo" : "Create your account"}
+              <ChevronRight size={13} />
+            </button>
+          )}
+          <div className="screen-heading">
             <div>
-              <div className="eyebrow">
-                <span className="tiny-green-dot" />
-                {page === "Explore"
-                  ? "A NEW DAY, A LITTLE POSSIBILITY"
+              <p className="screen-kicker">
+                {page === "Explore" || page === "My dares"
+                  ? "Two dares. Your choice."
                   : page === "Community"
-                    ? "LITTLE MOMENTS, SHARED"
-                    : page === "My dares"
-                      ? "SMALL STEPS, GOOD STORIES"
-                      : page === "Safety center"
-                        ? "YOUR COMFORT COMES FIRST"
-                        : "MAKE YOURSELF AT HOME"}
-              </div>
-              <h1>
-                {page === "Explore" ? (
-                  <>
-                    Hello, {state.user.name.split(" ")[0]}{" "}
-                    <span className="greeting-spark">✺</span>
-                  </>
-                ) : page === "Community" ? (
-                  "Life’s better when shared."
-                ) : page === "My dares" ? (
-                  "Your little adventures."
-                ) : page === "My profile" ? (
-                  "Your corner of the world."
-                ) : page === "Messages" ? (
-                  "A conversation starts here."
-                ) : page === "Settings" ? (
-                  "Just the way you like it."
-                ) : (
-                  "A safer space, together."
-                )}
-              </h1>
-              <p>
-                {page === "Explore"
-                  ? "Meet someone new. Try something different. Be a little more you."
-                  : page === "Community"
-                    ? "Real moments and little wins from the Dareme community."
-                    : page === "My dares"
-                      ? "Two thoughtful dares each day. Always on your terms."
-                      : page === "Messages"
-                        ? "Good connections happen at your own pace."
-                        : page === "My profile"
-                          ? "Share a little about you. Keep the rest yours."
-                          : page === "Settings"
-                            ? "Your profile, your preferences, your boundaries."
-                            : "A little trust goes a long way. Here’s how we build it."}
+                    ? "Small moments, shared."
+                    : page === "Messages"
+                      ? "Connections start with two yeses."
+                      : page === "Settings"
+                        ? "Your privacy and preferences."
+                        : "Your space, at your pace."}
               </p>
+              <h1>
+                {page === "Explore" || page === "My dares"
+                  ? "Today’s dares"
+                  : page === "Community"
+                    ? "Feed"
+                    : page === "Messages"
+                      ? "Chats"
+                      : page === "My profile"
+                        ? "Profile"
+                        : page === "Settings"
+                          ? "Settings"
+                          : "Safety & help"}
+              </h1>
             </div>
-            <div className="heading-side">
-              {state.user.demo ? (
-                <button
-                  className="preview-pill"
-                  onClick={() =>
-                    setDialog({ kind: DEMO_ONLY ? "demo-info" : "auth" })
-                  }
-                >
-                  <span />
-                  {DEMO_ONLY ? "No-login demo" : "Interactive preview"}{" "}
-                  <ArrowUpRight size={13} />
-                </button>
-              ) : (
-                <span className="member-pill">
-                  <Shield size={14} />
-                  Your space, protected
-                </span>
-              )}
-              <span className="today-date">
-                {new Intl.DateTimeFormat("en", {
-                  month: "short",
-                  day: "numeric",
-                  weekday: "short",
-                }).format(new Date())}
-              </span>
-            </div>
+            {(page === "Settings" || page === "Safety center") && (
+              <button
+                className="button light compact"
+                onClick={() => navigate("My profile")}
+              >
+                Done
+              </button>
+            )}
+            {page === "Community" && (
+              <button
+                className="icon-button new-post-button"
+                aria-label="Create a post"
+                onClick={() => setDialog({ kind: "new-post" })}
+              >
+                <Plus size={24} />
+              </button>
+            )}
           </div>
-          {page === "Explore" && (
-            <div className="content-grid">
-              <div className="primary-column">
-                <section className="welcome-hero">
-                  <div className="hero-content">
-                    <span className="hero-eyebrow">
-                      <Sparkles size={13} /> A LITTLE OUTSIDE YOUR EVERYDAY
-                    </span>
-                    <h2>
-                      Less scrolling.
-                      <br />
-                      More connecting.
-                    </h2>
-                    <p>
-                      Two little dares. A chance to meet someone
-                      <br className="desktop-break" /> who makes your day a
-                      little brighter.
-                    </p>
-                    <button
-                      className="button hero-button"
-                      onClick={() =>
-                        document.getElementById("daily-dares")?.scrollIntoView({
-                          behavior: "smooth",
-                          block: "start",
-                        })
-                      }
-                    >
-                      Find your little adventure <ArrowUpRight size={16} />
-                    </button>
-                    <div className="hero-footnote">
-                      <ShieldCheck size={13} />
-                      Thoughtful dares. Mutual consent. Your pace.
-                    </div>
-                  </div>
-                  <HeroArt />
-                </section>
-                <DailyDares {...actions} onChat={openChat} />
-                <section className="community-section">
-                  <div className="section-heading">
-                    <div>
-                      <span className="eyebrow muted">
-                        GOOD PEOPLE. LITTLE MOMENTS.
-                      </span>
-                      <h2>
-                        A little from the community <span>✳</span>
-                      </h2>
-                    </div>
-                    <button
-                      className="text-button"
-                      onClick={() => navigate("Community")}
-                    >
-                      See all <ArrowRight size={15} />
-                    </button>
-                  </div>
-                  <div className="feed-tabs">
-                    <div role="tablist" aria-label="Community feed">
-                      {["For you", "Following", "Saved"].map((t) => (
-                        <button
-                          role="tab"
-                          aria-selected={feedTab === t}
-                          className={feedTab === t ? "selected" : ""}
-                          key={t}
-                          onClick={() => setFeedTab(t)}
-                        >
-                          {t}
-                          {t === "For you" && (
-                            <span className="tiny-green-dot" />
-                          )}
-                        </button>
-                      ))}
-                    </div>
-                    <span>
-                      <span className="tiny-green-dot" /> A little kindness goes
-                      a long way
-                    </span>
-                  </div>
-                  <Feed
-                    posts={visiblePosts.slice(0, 2)}
-                    actions={actions}
-                    saved={saved}
-                    toggleSave={toggleSave}
-                  />
-                </section>
-                <div className="end-note">
-                  <span>✧</span> A small step out of your comfort zone. A big
-                  step toward connection.
+          {(page === "Explore" || page === "My dares") && (
+            <>
+              <section className="simple-intro">
+                <span className="intro-icon">
+                  <Zap size={23} />
+                </span>
+                <div>
+                  <strong>Try a dare. Meet someone.</strong>
+                  <p>Pick one below. Chat when you both say yes.</p>
                 </div>
-              </div>
-              <RightRail {...actions} people={filteredPeople} />
-            </div>
+              </section>
+              <DaresView {...actions} onChat={openChat} />
+              <button
+                className="quiet-link"
+                onClick={() => navigate("Safety center")}
+              >
+                <ShieldCheck size={16} />
+                You can leave any time. Learn how it works
+                <ChevronRight size={14} />
+              </button>
+            </>
           )}
           {page === "Community" && (
-            <div className="content-grid">
-              <div className="primary-column">
-                <div className="community-intro">
-                  <span className="community-intro-icon">
-                    <Users size={25} />
+            <>
+              <div className="people-strip">
+                <button
+                  className="people-shortcut"
+                  onClick={() => setDialog({ kind: "people" })}
+                >
+                  <span className="people-discover">
+                    <Search size={23} />
                   </span>
-                  <div>
-                    <h3>The best part? The people.</h3>
-                    <p>
-                      A space for little wins, everyday joy, and showing up as
-                      yourself.
-                    </p>
-                  </div>
+                  <span>Find people</span>
+                </button>
+                {filteredPeople.slice(0, 5).map((user) => (
                   <button
-                    className="button light"
-                    onClick={() => setDialog({ kind: "new-post" })}
+                    className="people-shortcut"
+                    key={user.id}
+                    onClick={() => setDialog({ kind: "profile", user })}
                   >
-                    <Plus size={16} />
-                    Share a moment
+                    <Avatar user={user} size="large" />
+                    <span>{user.name.split(" ")[0]}</span>
                   </button>
-                </div>
-                <div className="feed-tabs">
-                  <div role="tablist" aria-label="Community feed">
-                    {["For you", "Following", "Saved"].map((t) => (
-                      <button
-                        role="tab"
-                        aria-selected={feedTab === t}
-                        className={feedTab === t ? "selected" : ""}
-                        key={t}
-                        onClick={() => setFeedTab(t)}
-                      >
-                        {t}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-                {search && (
-                  <p className="search-results">Results for “{search}”</p>
-                )}
-                <Feed
-                  posts={visiblePosts}
-                  actions={actions}
-                  saved={saved}
-                  toggleSave={toggleSave}
-                />
+                ))}
               </div>
-              <RightRail {...actions} people={filteredPeople} />
-            </div>
+              <div className="feed-tabs">
+                <div role="tablist" aria-label="Community feed">
+                  {["For you", "Following", "Saved"].map((t) => (
+                    <button
+                      key={t}
+                      role="tab"
+                      aria-selected={feedTab === t}
+                      className={feedTab === t ? "selected" : ""}
+                      onClick={() => setFeedTab(t)}
+                    >
+                      {t}
+                    </button>
+                  ))}
+                </div>
+              </div>
+              <Feed
+                posts={visiblePosts}
+                actions={actions}
+                saved={saved}
+                toggleSave={toggleSave}
+                empty={
+                  feedTab === "Following"
+                    ? {
+                        title: "Your feed starts with a follow",
+                        description:
+                          "Follow someone to see their moments here.",
+                        label: "Find people",
+                        action: () => setDialog({ kind: "people" }),
+                      }
+                    : feedTab === "Saved"
+                      ? {
+                          title: "Nothing saved yet",
+                          description:
+                            "Tap the bookmark on a post to keep it here.",
+                          label: "Browse the feed",
+                          action: () => setFeedTab("For you"),
+                        }
+                      : undefined
+                }
+              />
+            </>
           )}
-          {page === "My dares" && <DaresView {...actions} onChat={openChat} />}
           {page === "Messages" && (
             <MessagesView
               {...actions}
@@ -636,55 +477,69 @@ export default function App() {
             />
           )}
           {page === "My profile" && (
-            <ProfileView {...actions} saved={saved} toggleSave={toggleSave} />
+            <>
+              <ProfileView
+                {...actions}
+                saved={saved}
+                toggleSave={toggleSave}
+                installed={install.installed}
+              />
+            </>
           )}
           {page === "Settings" && (
             <SettingsView {...actions} onLogout={logout} />
           )}
           {page === "Safety center" && <SafetyView {...actions} />}
-          <footer className="page-footer">
-            <span>
-              <Brand /> A little courage. A real connection.
-            </span>
-            <div>
-              <button onClick={() => navigate("Safety center")}>
-                Community guidelines
-              </button>
-              <span>·</span>
-              <button onClick={() => navigate("Settings")}>
-                Privacy & settings
-              </button>
-              <span>·</span>
-              <span>Made for real connections</span>
-              <Heart size={12} />
-            </div>
-          </footer>
         </main>
       </div>
-      <nav className="bottom-nav" aria-label="Mobile navigation">
-        {[...nav, { name: "My profile" as Page, icon: Users }].map(
-          ({ name, icon: Icon }) => (
-            <button
-              key={name}
-              className={page === name ? "active" : ""}
-              onClick={() => navigate(name)}
-              aria-current={page === name ? "page" : undefined}
-            >
-              <Icon size={21} />
-              <span>{name === "My profile" ? "Profile" : name}</span>
-            </button>
-          ),
-        )}
+      <nav className="bottom-nav" aria-label="Main navigation">
+        {nav.map(({ name, label, icon: Icon }) => (
+          <button
+            key={name}
+            aria-label={label}
+            aria-current={
+              page === name ||
+              (name === "Explore" && page === "My dares") ||
+              (name === "My profile" &&
+                ["Settings", "Safety center"].includes(page))
+                ? "page"
+                : undefined
+            }
+            className={
+              page === name ||
+              (name === "Explore" && page === "My dares") ||
+              (name === "My profile" &&
+                ["Settings", "Safety center"].includes(page))
+                ? "active"
+                : ""
+            }
+            onClick={() => {
+              if (name === "Messages") setSelectedChat(null);
+              navigate(name);
+            }}
+          >
+            <span className="tab-icon">
+              <Icon size={24} strokeWidth={page === name ? 2.3 : 1.7} />
+              {name === "Messages" && active > 0 && (
+                <span className="nav-dot" />
+              )}
+            </span>
+            <span>{label}</span>
+          </button>
+        ))}
       </nav>
       {dialog?.kind === "new-post" && (
         <NewPostDialog {...actions} onClose={close} />
+      )}
+      {dialog?.kind === "install" && (
+        <InstallDialog {...install} onClose={close} />
       )}
       {!DEMO_ONLY && dialog?.kind === "auth" && (
         <AuthDialog {...actions} onClose={close} />
       )}
       {dialog?.kind === "demo-info" && (
         <Modal
-          title="Take a little look around."
+          title="About this demo"
           eyebrow="NO LOGIN. JUST A LITTLE CURIOSITY."
           onClose={close}
         >
@@ -709,6 +564,11 @@ export default function App() {
               try {
                 await send("/demo/reset");
                 setSaved([]);
+                try {
+                  localStorage.removeItem(`dareme-saved-${state.user.id}`);
+                } catch {
+                  /* Storage may be unavailable. */
+                }
                 await refresh();
                 navigate("Explore");
                 close();
@@ -798,11 +658,7 @@ export default function App() {
         </Modal>
       )}
       {dialog?.kind === "notifications" && (
-        <Modal
-          title="Your little updates"
-          eyebrow="STAY IN THE LOOP"
-          onClose={close}
-        >
+        <Modal title="Notifications" eyebrow="STAY IN THE LOOP" onClose={close}>
           <div className="notification-list">
             {state.requests.map((u) => (
               <div key={u.id} className="person-row">
@@ -881,31 +737,36 @@ export default function App() {
 export function DailyDares({
   state,
   open,
-  onChat,
-  navigate,
 }: AppActions & { onChat: (id: string) => void }) {
   const mine = state.matches.filter(
     (m) => m.day === state.day && m.status !== "left",
+  );
+  const available = state.dares.filter(
+    (d) => !mine.some((m) => m.dare === d.id),
   );
   return (
     <section className="daily-section" id="daily-dares">
       <div className="section-heading">
         <div>
           <h2>
-            Your daily dose of daring <span className="sun-symbol">☼</span>
+            {available.length === 0
+              ? "You’ve tried both dares"
+              : mine.length
+                ? "More to try"
+                : "Choose a dare"}
           </h2>
-          <p>
-            Small dares. Real connections. All you need is a little curiosity.
-          </p>
+          <p>Two simple ways to connect today.</p>
         </div>
         <span className="daily-count">
           <Zap size={13} />
-          <strong>{2 - mine.length} / 2</strong> available
+          <strong>
+            {available.length} / {state.dares.length}
+          </strong>{" "}
+          available
         </span>
       </div>
       <div className="dare-grid">
-        {state.dares.map((d) => {
-          const match = mine.find((m) => m.dare === d.id);
+        {available.map((d) => {
           return (
             <article className={`dare-card ${d.color}`} key={d.id}>
               <DareArt dare={d} />
@@ -928,32 +789,25 @@ export function DailyDares({
                 </div>
                 <button
                   className="dare-button"
-                  onClick={() =>
-                    match
-                      ? match.status === "active"
-                        ? onChat(match.id)
-                        : navigate("My dares")
-                      : open({ kind: "dare", dare: d })
-                  }
+                  onClick={() => open({ kind: "dare", dare: d })}
                 >
-                  {match
-                    ? match.status === "completed"
-                      ? "A little win, completed"
-                      : match.status === "pending"
-                        ? "Waiting for a little connection"
-                        : "Continue your adventure"
-                    : "I’m a little curious"}
-                  {match?.status === "completed" ? (
-                    <Check size={16} />
-                  ) : (
-                    <ArrowUpRight size={17} />
-                  )}
+                  Try this dare <ArrowUpRight size={17} />
                 </button>
               </div>
             </article>
           );
         })}
       </div>
+      {!available.length && (
+        <p className="daily-finished">
+          Keep your conversations going in Chats. New dares arrive at{" "}
+          {new Intl.DateTimeFormat(undefined, {
+            hour: "numeric",
+            minute: "2-digit",
+          }).format(new Date(state.resetAt))}
+          .
+        </p>
+      )}
       <div className="daily-footnote">
         <span>
           <span className="tiny-green-dot" />
@@ -966,182 +820,23 @@ export function DailyDares({
     </section>
   );
 }
-function RightRail({
-  state,
-  people,
-  open,
-  act,
-  navigate,
-}: AppActions & { people: User[] }) {
-  return (
-    <aside className="right-rail">
-      <section className="matching-card">
-        <div className="rail-card-heading">
-          <span className="small-icon pale-green">
-            <ShieldCheck size={20} />
-          </span>
-          <span>
-            Good people.
-            <br />
-            <strong>Your kind of connection.</strong>
-          </span>
-        </div>
-        <div className="verified-setting">
-          <div>
-            <strong>
-              Verified people only <Verified small />
-            </strong>
-            <p>A little more peace of mind.</p>
-          </div>
-          <Toggle
-            checked={state.user.verifiedOnly}
-            label="Match with verified people only"
-            onChange={() =>
-              act(
-                () =>
-                  send(
-                    "/me",
-                    { verifiedOnly: !state.user.verifiedOnly },
-                    "PATCH",
-                  ),
-                state.user.verifiedOnly
-                  ? "Matching filter updated."
-                  : "Verified-only matching is on.",
-              )
-            }
-          />
-        </div>
-        <button
-          className="rail-link"
-          onClick={() => open({ kind: "verification" })}
-        >
-          What does verified mean? <ArrowUpRight size={13} />
-        </button>
-        <div className="intention-setting">
-          <span>I’m here for</span>
-          <div
-            className="intention-options"
-            role="group"
-            aria-label="Connection preference"
-          >
-            {[
-              { v: "friends", label: "Friends", icon: "✳" },
-              { v: "dating", label: "Dating", icon: "♡" },
-              { v: "both", label: "Both", icon: "✧" },
-            ].map((o) => (
-              <button
-                key={o.v}
-                className={state.user.intention === o.v ? "selected" : ""}
-                onClick={() =>
-                  act(
-                    () => send("/me", { intention: o.v }, "PATCH"),
-                    "Connection preference saved.",
-                  )
-                }
-              >
-                <span>{o.icon}</span>
-                {o.label}
-              </button>
-            ))}
-          </div>
-        </div>
-      </section>
-      <section className="people-card">
-        <div className="rail-section-heading">
-          <h3>A few friendly faces</h3>
-          <span>✦</span>
-        </div>
-        <p className="rail-description">A new connection could start here.</p>
-        <div className="people-list">
-          {people.slice(0, 3).map((u, i) => (
-            <button
-              className="person-row"
-              key={u.id}
-              onClick={() => open({ kind: "profile", user: u })}
-            >
-              <span className="avatar-wrap">
-                <Avatar user={u} />
-                <span className={`person-status status-${i}`} />
-              </span>
-              <span>
-                <strong>
-                  {u.name}
-                  {u.verified && <Verified small />}
-                </strong>
-                <small>
-                  {i === 0
-                    ? "A little creative"
-                    : i === 1
-                      ? "Always curious"
-                      : "Here for the little things"}
-                </small>
-              </span>
-              <ArrowUpRight size={16} />
-            </button>
-          ))}
-          {!people.length && (
-            <p className="small-muted">
-              No profiles match your current filters.
-            </p>
-          )}
-        </div>
-        <button
-          className="people-more"
-          onClick={() => {
-            open({ kind: "people" });
-          }}
-        >
-          Meet the community <ArrowRight size={14} />
-        </button>
-        <span className="sample-note">Preview profiles are fictional.</span>
-      </section>
-      <section className="safety-card">
-        <span className="safety-art">
-          <ShieldCheck size={35} strokeWidth={1.3} />
-          <span className="safety-star">✧</span>
-        </span>
-        <span className="eyebrow">A LITTLE REASSURANCE</span>
-        <h3>
-          Good connections
-          <br />
-          start with feeling safe.
-        </h3>
-        <p>
-          Your boundaries matter. You decide what to share, who to meet, and
-          when to take a step back.
-        </p>
-        <button onClick={() => navigate("Safety center")}>
-          Your safety, always <ArrowUpRight size={15} />
-        </button>
-        <div className="safety-bottom">
-          <LockKeyhole size={12} />
-          Your profile is {state.user.private ? "private" : "public"}. Your
-          choices are yours.
-        </div>
-      </section>
-      <section className="little-note">
-        <span>“</span>
-        <p>
-          Sometimes a little dare
-          <br />
-          is all it takes.
-        </p>
-        <small>HERE’S TO YOUR NEXT GOOD STORY.</small>
-        <span className="note-flower">✳</span>
-      </section>
-    </aside>
-  );
-}
 export function Feed({
   posts,
   actions,
   saved,
   toggleSave,
+  empty,
 }: {
   posts: Post[];
   actions: AppActions;
   saved: string[];
   toggleSave: (p: Post) => void;
+  empty?: {
+    title: string;
+    description: string;
+    label: string;
+    action: () => void;
+  };
 }) {
   return posts.length ? (
     <div className="feed-grid">
@@ -1156,14 +851,18 @@ export function Feed({
       ))}
     </div>
   ) : (
-    <EmptyState icon={<ImagePlus size={28} />} title="A little quiet here.">
-      Follow someone, save a moment, or share the first little win of your own.
+    <EmptyState
+      icon={<ImagePlus size={28} />}
+      title={empty?.title || "Your first moment starts here"}
+    >
+      {empty?.description ||
+        "Share a photo or a thought. It doesn’t have to be anything big."}
       <button
         className="button light"
-        onClick={() => actions.open({ kind: "new-post" })}
+        onClick={empty?.action || (() => actions.open({ kind: "new-post" }))}
       >
         <Plus size={16} />
-        Share a moment
+        {empty?.label || "Share a moment"}
       </button>
     </EmptyState>
   );

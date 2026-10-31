@@ -70,7 +70,7 @@ export function NewPostDialog({
       if (file) data.append("image", file);
       await api("/posts", { method: "POST", body: data });
       await refresh();
-      notify("Your little moment has been shared.");
+      notify("Your post has been shared.");
       onClose();
     } catch (e) {
       setError((e as Error).message);
@@ -80,8 +80,8 @@ export function NewPostDialog({
   }
   return (
     <Modal
-      title="A little moment, worth sharing."
-      eyebrow="YOUR EVERYDAY IS SOMEONE’S INSPIRATION"
+      title="Share a moment"
+      eyebrow="A PHOTO. A THOUGHT. A SMALL WIN."
       onClose={onClose}
     >
       <form onSubmit={submit}>
@@ -112,7 +112,7 @@ export function NewPostDialog({
         <textarea
           id="caption"
           className="compose-input"
-          placeholder="A little win? A new perspective? Tell your story…"
+          placeholder="What would you like to share?"
           rows={4}
           maxLength={1500}
           required
@@ -138,7 +138,7 @@ export function NewPostDialog({
         ) : (
           <label className="upload-zone">
             <ImagePlus size={28} />
-            <strong>Add a little visual</strong>
+            <strong>Add a photo (optional)</strong>
             <span>JPEG, PNG or WebP · Up to 5 MB</span>
             <input
               ref={fileRef}
@@ -180,7 +180,7 @@ export function NewPostDialog({
             "Sharing your moment…"
           ) : (
             <>
-              Share a little moment <ArrowUpRight size={17} />
+              Share post <ArrowUpRight size={17} />
             </>
           )}
         </button>
@@ -390,8 +390,8 @@ export function DareDialog({
   if (match)
     return (
       <Modal
-        title="A little adventure is waiting."
-        eyebrow="YOU’VE TAKEN THE FIRST LITTLE STEP"
+        title="You’ve said yes"
+        eyebrow="YOUR PARTNER GETS TO CHOOSE TOO"
         onClose={onClose}
       >
         <div className="match-success">
@@ -438,7 +438,7 @@ export function DareDialog({
               "Opening sample chat…"
             ) : (
               <>
-                Try a sample connection <ArrowRight size={16} />
+                Open sample chat <ArrowRight size={16} />
               </>
             )}
           </button>
@@ -476,7 +476,7 @@ export function DareDialog({
           Online only
         </span>
       </div>
-      <h3 className="dialog-section-title">A few little ground rules</h3>
+      <h3 className="dialog-section-title">Before you start</h3>
       <ul className="rules">
         {dare.rules.map((r) => (
           <Rule key={r}>{r}</Rule>
@@ -513,10 +513,10 @@ export function DareDialog({
         disabled={!consent || busy}
       >
         {busy ? (
-          "Finding a little connection…"
+          "Finding a partner…"
         ) : (
           <>
-            Let’s give it a little try <ArrowUpRight size={17} />
+            Accept dare <ArrowUpRight size={17} />
           </>
         )}
       </button>
@@ -597,7 +597,7 @@ export function EditProfileDialog({
             "Saving…"
           ) : (
             <>
-              Save my little introduction <Check size={16} />
+              Save changes <Check size={16} />
             </>
           )}
         </button>

@@ -1,12 +1,14 @@
 import { useEffect, useState } from "react";
 import {
   ArrowRight,
+  ArrowLeft,
   ArrowUpRight,
   BadgeCheck,
   Camera,
   Check,
   CheckCircle2,
   ChevronRight,
+  Download,
   Flag,
   Heart,
   LockKeyhole,
@@ -43,7 +45,10 @@ export function DaresView(
   props: AppActions & { onChat: (id: string) => void },
 ) {
   const { state, act, onChat, open } = props;
-  const mine = state.matches.filter((m) => m.status !== "left");
+  const mine = state.matches.filter(
+    (m) =>
+      m.status !== "left" && (m.day === state.day || m.status !== "completed"),
+  );
   return (
     <div className="content-grid">
       <div className="primary-column">
@@ -51,7 +56,7 @@ export function DaresView(
           <section className="connections-section">
             <div className="section-heading">
               <div>
-                <h2>Your little connections</h2>
+                <h2>Your connections</h2>
                 <p>Every adventure starts with two comfortable yeses.</p>
               </div>
               <span className="tag">
@@ -78,10 +83,12 @@ export function DaresView(
                     <span className={`tag match-status ${m.status}`}>
                       <span />
                       {m.status === "pending"
-                        ? "Waiting for two yeses"
+                        ? m.incoming
+                          ? "Your turn to accept"
+                          : "Waiting for partner"
                         : m.status === "active"
-                          ? "A little adventure in progress"
-                          : "A little win"}
+                          ? "In progress"
+                          : "Completed"}
                     </span>
                   </div>
                   {m.status === "pending" && m.incoming ? (
@@ -101,7 +108,7 @@ export function DaresView(
                             className="button primary compact"
                             onClick={() => onChat(m.id)}
                           >
-                            Say a little hello <MessageCircle size={15} />
+                            Open chat <MessageCircle size={15} />
                           </button>
                         )}
                         {m.status === "completed" && (
@@ -124,7 +131,7 @@ export function DaresView(
                                 onChat(m.id);
                             }}
                           >
-                            Try sample acceptance <Sparkles size={15} />
+                            Open sample chat <Sparkles size={15} />
                           </button>
                         )}
                         {m.status !== "completed" && (
@@ -265,11 +272,14 @@ export function MessagesView({
   navigate,
   selectedId,
   onSelect,
-}: AppActions & { selectedId: string | null; onSelect: (id: string) => void }) {
+}: AppActions & {
+  selectedId: string | null;
+  onSelect: (id: string | null) => void;
+}) {
   const matches = state.matches.filter((m) =>
     ["active", "completed"].includes(m.status),
   );
-  const selected = matches.find((m) => m.id === selectedId) || matches[0];
+  const selected = matches.find((m) => m.id === selectedId);
   const [messages, setMessages] = useState<Message[]>([]);
   const [text, setText] = useState("");
   const [busy, setBusy] = useState(false);
@@ -320,17 +330,14 @@ export function MessagesView({
   if (!matches.length)
     return (
       <div className="messages-empty-layout">
-        <EmptyState
-          icon={<MessageCircle size={36} />}
-          title="A good hello is worth waiting for."
-        >
-          Chat opens when both people accept a dare. Choose a little adventure
-          and let the connection happen at your pace.
+        <EmptyState icon={<MessageCircle size={36} />} title="No chats yet">
+          Pick a dare and meet a partner. When you both accept, your chat
+          appears here.
           <button
             className="button primary"
             onClick={() => navigate("My dares")}
           >
-            Explore my daily dares <ArrowRight size={16} />
+            Choose a dare <ArrowRight size={16} />
           </button>
         </EmptyState>
         <div className="subtle-note">
@@ -344,7 +351,7 @@ export function MessagesView({
     );
   return (
     <>
-      <div className="chat-layout">
+      <div className={`chat-layout ${selected ? "has-selection" : ""}`}>
         <aside className="chat-sidebar">
           <div className="chat-sidebar-title">
             <h3>Your connections</h3>
@@ -363,6 +370,11 @@ export function MessagesView({
                   {m.peer.verified && <Verified small />}
                 </strong>
                 <small>{m.dareInfo.title}</small>
+                <small>
+                  {m.status === "completed"
+                    ? "Completed · read-only"
+                    : "Ready to chat"}
+                </small>
               </span>
               <ChevronRight size={15} />
             </button>
@@ -373,158 +385,172 @@ export function MessagesView({
             <p>Only mutually accepted connections can message you.</p>
           </div>
         </aside>
-        <section className="chat-conversation">
-          {selected && (
-            <>
-              <header className="chat-header">
-                <button
-                  className="post-author"
-                  onClick={() => open({ kind: "profile", user: selected.peer })}
-                >
-                  <Avatar user={selected.peer} />
-                  <span>
-                    <strong>
-                      {selected.peer.name}
-                      {selected.peer.verified && <Verified small />}
-                    </strong>
-                    <small>
-                      {selected.peer.sample
-                        ? "Sample conversation"
-                        : selected.dareInfo.title}
-                    </small>
-                  </span>
-                </button>
-                <button
-                  className="icon-button"
-                  aria-label="Report this connection"
-                  onClick={() => open({ kind: "report", user: selected.peer })}
-                >
-                  <Flag size={18} />
-                </button>
-                <button
-                  className="text-button leave-button"
-                  onClick={() => setConfirmLeave(true)}
-                >
-                  Leave <X size={14} />
-                </button>
-              </header>
-              <div className="chat-safety-banner">
-                <LockKeyhole size={13} />
-                Two yeses. One little adventure. Keep personal details private.
-              </div>
-              <div className="chat-messages">
-                <div className="chat-start">
-                  <span>
-                    <Zap size={23} />
-                  </span>
-                  <h3>{selected.dareInfo.title}</h3>
-                  <p>{selected.dareInfo.description}</p>
-                  <span className="tag">
-                    <CheckCircle2 size={12} />
-                    Both accepted
-                  </span>
-                </div>
-                {selected.peer.sample && (
-                  <p className="chat-preview-note">
-                    You’re trying a sample chat. Messages are saved to your
-                    preview; no real person will reply.
-                  </p>
-                )}
-                {messages.map((m) => (
-                  <div
-                    key={m.id}
-                    className={`message-row ${m.user_id === state.user.id ? "mine" : ""}`}
+        {selected && (
+          <section className="chat-conversation">
+            {selected && (
+              <>
+                <header className="chat-header">
+                  <button
+                    className="icon-button"
+                    aria-label="Back to chats"
+                    onClick={() => onSelect(null)}
                   >
-                    {m.user_id !== state.user.id && (
-                      <Avatar user={selected.peer} size="small" />
-                    )}
-                    <div className="message-bubble">
-                      <p>{m.text}</p>
-                      <time>
-                        {new Intl.DateTimeFormat("en", {
-                          hour: "numeric",
-                          minute: "2-digit",
-                        }).format(new Date(m.created))}
-                      </time>
-                    </div>
-                  </div>
-                ))}
-                {selected.status === "completed" && (
-                  <div className="completed-chat">
-                    <CheckCircle2 size={21} />
+                    <ArrowLeft size={21} />
+                  </button>
+                  <button
+                    className="post-author"
+                    onClick={() =>
+                      open({ kind: "profile", user: selected.peer })
+                    }
+                  >
+                    <Avatar user={selected.peer} />
                     <span>
-                      A little win, completed. This conversation is now
-                      read-only.
+                      <strong>
+                        {selected.peer.name}
+                        {selected.peer.verified && <Verified small />}
+                      </strong>
+                      <small>
+                        {selected.peer.sample
+                          ? "Sample conversation"
+                          : selected.dareInfo.title}
+                      </small>
+                    </span>
+                  </button>
+                  <button
+                    className="icon-button"
+                    aria-label="Report this connection"
+                    onClick={() =>
+                      open({ kind: "report", user: selected.peer })
+                    }
+                  >
+                    <Flag size={18} />
+                  </button>
+                  <button
+                    className="text-button leave-button"
+                    onClick={() => setConfirmLeave(true)}
+                  >
+                    Leave <X size={14} />
+                  </button>
+                </header>
+                <div className="chat-safety-banner">
+                  <LockKeyhole size={13} />
+                  Two yeses. One little adventure. Keep personal details
+                  private.
+                </div>
+                <div className="chat-messages">
+                  <div className="chat-start">
+                    <span>
+                      <Zap size={23} />
+                    </span>
+                    <h3>{selected.dareInfo.title}</h3>
+                    <p>{selected.dareInfo.description}</p>
+                    <span className="tag">
+                      <CheckCircle2 size={12} />
+                      Both accepted
                     </span>
                   </div>
-                )}
-              </div>
-              {error && (
-                <div className="form-error" role="alert">
-                  {error}
+                  {selected.peer.sample && (
+                    <p className="chat-preview-note">
+                      You’re trying a sample chat. Messages are saved to your
+                      preview; no real person will reply.
+                    </p>
+                  )}
+                  {messages.map((m) => (
+                    <div
+                      key={m.id}
+                      className={`message-row ${m.user_id === state.user.id ? "mine" : ""}`}
+                    >
+                      {m.user_id !== state.user.id && (
+                        <Avatar user={selected.peer} size="small" />
+                      )}
+                      <div className="message-bubble">
+                        <p>{m.text}</p>
+                        <time>
+                          {new Intl.DateTimeFormat("en", {
+                            hour: "numeric",
+                            minute: "2-digit",
+                          }).format(new Date(m.created))}
+                        </time>
+                      </div>
+                    </div>
+                  ))}
+                  {selected.status === "completed" && (
+                    <div className="completed-chat">
+                      <CheckCircle2 size={21} />
+                      <span>
+                        A little win, completed. This conversation is now
+                        read-only.
+                      </span>
+                    </div>
+                  )}
                 </div>
-              )}
-              {selected.status === "active" ? (
-                <>
-                  <div className="quick-messages">
-                    {[
-                      "A little hello! 👋",
-                      "What made you smile today?",
-                      "Ready to give it a try?",
-                    ].map((t) => (
-                      <button key={t} onClick={() => setText(t)}>
-                        {t}
+                {error && (
+                  <div className="form-error" role="alert">
+                    {error}
+                  </div>
+                )}
+                {selected.status === "active" ? (
+                  <>
+                    <div className="quick-messages">
+                      {[
+                        "A little hello! 👋",
+                        "What made you smile today?",
+                        "Ready to give it a try?",
+                      ].map((t) => (
+                        <button key={t} onClick={() => setText(t)}>
+                          {t}
+                        </button>
+                      ))}
+                    </div>
+                    <form className="chat-input" onSubmit={submit}>
+                      <input
+                        aria-label="Message"
+                        placeholder="Message…"
+                        maxLength={1000}
+                        value={text}
+                        onChange={(e) => setText(e.target.value)}
+                        required
+                      />
+                      <button
+                        className="send-button"
+                        disabled={busy || !text.trim()}
+                        aria-label="Send message"
+                      >
+                        <Send size={18} />
                       </button>
-                    ))}
-                  </div>
-                  <form className="chat-input" onSubmit={submit}>
-                    <input
-                      aria-label="Message"
-                      placeholder="Say a little hello…"
-                      maxLength={1000}
-                      value={text}
-                      onChange={(e) => setText(e.target.value)}
-                      required
-                    />
-                    <button
-                      className="send-button"
-                      disabled={busy || !text.trim()}
-                      aria-label="Send message"
-                    >
-                      <Send size={18} />
-                    </button>
-                  </form>
-                  <div className="chat-complete">
-                    <button
-                      onClick={async () => {
-                        if (
-                          await act(
-                            () => send(`/matches/${selected.id}/complete`),
-                            "A little win! Your dare is complete.",
+                    </form>
+                    <div className="chat-complete">
+                      <button
+                        onClick={async () => {
+                          if (
+                            await act(
+                              () => send(`/matches/${selected.id}/complete`),
+                              "A little win! Your dare is complete.",
+                            )
                           )
-                        )
-                          await refresh();
-                      }}
-                    >
-                      <CheckCircle2 size={14} />
-                      We did it! Mark my dare complete
-                    </button>
-                  </div>
-                </>
-              ) : (
-                <button
-                  className="button light chat-back"
-                  onClick={() => {
-                    navigate("My dares");
-                    notify("A little win is worth celebrating.");
-                  }}
-                >
-                  Back to my little adventures <ArrowRight size={15} />
-                </button>
-              )}
-            </>
-          )}
-        </section>
+                            await refresh();
+                        }}
+                      >
+                        <CheckCircle2 size={14} />
+                        We did it! Mark my dare complete
+                      </button>
+                    </div>
+                  </>
+                ) : (
+                  <button
+                    className="button light chat-back"
+                    onClick={() => {
+                      navigate("My dares");
+                      notify("A little win is worth celebrating.");
+                    }}
+                  >
+                    Back to my little adventures <ArrowRight size={15} />
+                  </button>
+                )}
+              </>
+            )}
+          </section>
+        )}
       </div>
       {confirmLeave && selected && (
         <Modal
@@ -562,7 +588,11 @@ export function MessagesView({
   );
 }
 export function ProfileView(
-  props: AppActions & { saved: string[]; toggleSave: (p: Post) => void },
+  props: AppActions & {
+    saved: string[];
+    toggleSave: (p: Post) => void;
+    installed?: boolean;
+  },
 ) {
   const { state, open, navigate, saved, toggleSave } = props;
   const [tab, setTab] = useState("My moments");
@@ -595,8 +625,7 @@ export function ProfileView(
               {state.user.verified && <Verified />}
             </h2>
             <span className="profile-handle">
-              @{state.user.name.toLowerCase().replace(/[^a-z]/g, "")}
-              {state.user.demo && <span>· Preview account</span>}
+              {state.user.demo ? "Sample account" : "Dareme member"}
             </span>
             <p>
               {state.user.bio ||
@@ -617,13 +646,16 @@ export function ProfileView(
         </div>
         <div className="profile-stats">
           <span>
-            <strong>{mine.length}</strong>little moments
+            <strong>{mine.length}</strong>
+            {mine.length === 1 ? "post" : "posts"}
           </span>
           <span>
-            <strong>{completed}</strong>dares completed
+            <strong>{completed}</strong>
+            {completed === 1 ? "dare completed" : "dares completed"}
           </span>
           <span>
-            <strong>{connections}</strong>connections
+            <strong>{connections}</strong>
+            {connections === 1 ? "connection" : "connections"}
           </span>
           <button onClick={() => navigate("Settings")}>
             <Settings size={16} />
@@ -631,6 +663,28 @@ export function ProfileView(
           </button>
         </div>
       </section>
+      <div className="profile-utilities">
+        <button className="button light" onClick={() => navigate("Settings")}>
+          <Settings size={16} />
+          Preferences
+        </button>
+        <button
+          className="button light"
+          onClick={() => navigate("Safety center")}
+        >
+          <ShieldCheck size={16} />
+          Safety & help
+        </button>
+        {!props.installed && (
+          <button
+            className="button light"
+            onClick={() => open({ kind: "install" })}
+          >
+            <Download size={16} />
+            Get the app
+          </button>
+        )}
+      </div>
       <div className="profile-content">
         <div className="primary-column">
           <div className="feed-tabs">
@@ -668,6 +722,16 @@ export function ProfileView(
             saved={saved}
             toggleSave={toggleSave}
             actions={props}
+            empty={
+              tab === "Saved moments"
+                ? {
+                    title: "Nothing saved yet",
+                    description: "Tap the bookmark on a post to keep it here.",
+                    label: "Browse the feed",
+                    action: () => navigate("Community"),
+                  }
+                : undefined
+            }
           />
         </div>
         <aside className="profile-side-note">
