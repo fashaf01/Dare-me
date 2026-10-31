@@ -19,6 +19,7 @@ import {
   Zap,
 } from "lucide-react";
 import { api, send } from "./api";
+import { DEMO_ONLY } from "./config";
 import {
   Avatar,
   DareArt,
@@ -89,7 +90,9 @@ export function NewPostDialog({
           <div>
             <strong>{state.user.name}</strong>
             <small>
-              {state.user.private ? (
+              {DEMO_ONLY ? (
+                <>Demo post · on this device only</>
+              ) : state.user.private ? (
                 <>
                   <LockKeyhole size={12} />
                   Private · approved followers only
@@ -163,8 +166,9 @@ export function NewPostDialog({
         <div className="subtle-note">
           <ShieldCheck size={17} />
           <p>
-            Keep faces, addresses, and personal details out of photos. Image
-            location metadata is removed on upload.
+            {DEMO_ONLY
+              ? "Photos stay in this browser. Use sample content; nothing is uploaded or shared."
+              : "Keep faces, addresses, and personal details out of photos. Image location metadata is removed on upload."}
           </p>
         </div>
         <FormError error={error} />
@@ -761,7 +765,11 @@ export function VerificationDialog({ onClose }: { onClose: () => void }) {
         never guarantees someone’s intentions or behavior.
       </p>
       <ul className="rules">
-        <Rule>Verified-only matching is enforced by the server.</Rule>
+        <Rule>
+          {DEMO_ONLY
+            ? "Try the verified-only filter on our fictional sample profiles."
+            : "Verified-only matching is enforced by the server."}
+        </Rule>
         <Rule>Only fictional sample accounts have badges in this preview.</Rule>
         <Rule>
           New accounts are unverified. You can’t buy or give yourself a badge.
@@ -829,7 +837,9 @@ export function ReportDialog({
         <div className="report-success">
           <CheckCircle2 size={45} />
           <p>
-            Your report has been saved.
+            {DEMO_ONLY
+              ? "Sample report saved on this device."
+              : "Your report has been saved."}
             <br />
             <strong>Reference: {reportId.slice(0, 8)}</strong>
           </p>
@@ -837,9 +847,9 @@ export function ReportDialog({
         <div className="preview-notice">
           <Flag size={18} />
           <p>
-            This prototype does not have a staffed moderation team. Reports are
-            stored, but aren’t actively monitored. If you’re in immediate
-            danger, contact your local emergency services.
+            {DEMO_ONLY
+              ? "This is a demo only. No report is sent to a moderation team. You can reset all sample data from Demo options."
+              : "This prototype does not have a staffed moderation team. Reports are stored, but aren’t actively monitored. If you’re in immediate danger, contact your local emergency services."}
           </p>
         </div>
         <button className="button primary full" onClick={onClose}>

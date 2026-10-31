@@ -1,0 +1,150 @@
+{
+  "dares": [
+    {
+      "id": "little-things",
+      "title": "The little things",
+      "category": "A little perspective",
+      "description": "Find something that makes you smile. Share a photo and the story behind it.",
+      "duration": "10–15 min",
+      "icon": "camera",
+      "color": "peach",
+      "rules": [
+        "Choose an object, a view, or a small detail — never a stranger’s face.",
+        "No faces, addresses, documents, or identifying details in your photo.",
+        "Share only what you’re comfortable with. You can skip or leave anytime."
+      ]
+    },
+    {
+      "id": "drawn-together",
+      "title": "Drawn together",
+      "category": "A little creativity",
+      "description": "Pick a word together. Make a tiny doodle, then share your masterpieces.",
+      "duration": "5–10 min",
+      "icon": "pencil",
+      "color": "lavender",
+      "rules": [
+        "Keep your word and drawing kind, respectful, and suitable for everyone.",
+        "No artistic skills needed — and no pressure to share an image.",
+        "Stay in the app. Never share your address, phone number, or private details."
+      ]
+    }
+  ],
+  "people": [
+    {
+      "id": "sample-alex",
+      "name": "Alex Morgan",
+      "bio": "Usually taking the scenic route. Here for new friends and little adventures.",
+      "avatar": "/images/avatar-alex.jpg",
+      "private": false,
+      "verified": true,
+      "verifiedOnly": true,
+      "intention": "both",
+      "demo": true,
+      "sample": true
+    },
+    {
+      "id": "sample-jamie",
+      "name": "Jamie Chen",
+      "bio": "Finding joy in the little things. Coffee, creativity & a good conversation.",
+      "avatar": "/images/avatar-jamie.jpg",
+      "private": false,
+      "verified": true,
+      "verifiedOnly": true,
+      "intention": "friends",
+      "demo": true,
+      "sample": true
+    },
+    {
+      "id": "sample-riley",
+      "name": "Riley Park",
+      "bio": "Collecting small moments and trying something new.",
+      "avatar": "",
+      "private": false,
+      "verified": false,
+      "verifiedOnly": true,
+      "intention": "friends",
+      "demo": true,
+      "sample": true
+    },
+    {
+      "id": "sample-sophie",
+      "name": "Sophie Taylor",
+      "bio": "A sketchbook, a playlist, and a little curiosity.",
+      "avatar": "/images/avatar-sophie.jpg",
+      "private": true,
+      "verified": true,
+      "verifiedOnly": true,
+      "intention": "both",
+      "demo": true,
+      "sample": true
+    }
+  ],
+  "posts": [
+    {
+      "id": "sample-post-1",
+      "user_id": "sample-jamie",
+      "caption": "Today’s little win: looking up instead of looking down. A little fresh air goes a long way. 🌿",
+      "image": "/images/forest.jpg",
+      "created": "2026-10-31T09:35:00.000Z",
+      "user": {
+        "id": "sample-jamie",
+        "name": "Jamie Chen",
+        "bio": "Finding joy in the little things. Coffee, creativity & a good conversation.",
+        "avatar": "/images/avatar-jamie.jpg",
+        "private": false,
+        "verified": true,
+        "verifiedOnly": true,
+        "intention": "friends",
+        "demo": true,
+        "sample": true
+      },
+      "likes": 24,
+      "liked": false,
+      "comments": 0
+    },
+    {
+      "id": "sample-post-2",
+      "user_id": "sample-alex",
+      "caption": "Somewhere between getting lost and finding a new favorite view. Your sign to take the scenic route. ☁️",
+      "image": "/images/mountains.jpg",
+      "created": "2026-10-31T08:20:00.000Z",
+      "user": {
+        "id": "sample-alex",
+        "name": "Alex Morgan",
+        "bio": "Usually taking the scenic route. Here for new friends and little adventures.",
+        "avatar": "/images/avatar-alex.jpg",
+        "private": false,
+        "verified": true,
+        "verifiedOnly": true,
+        "intention": "both",
+        "demo": true,
+        "sample": true
+      },
+      "likes": 18,
+      "liked": false,
+      "comments": 0
+    },
+    {
+      "id": "sample-post-3",
+      "user_id": "sample-riley",
+      "caption": "Made a little space for creativity today. What’s one thing you made just for fun?",
+      "image": "/images/creative.jpg",
+      "created": "2026-10-31T07:10:00.000Z",
+      "user": {
+        "id": "sample-riley",
+        "name": "Riley Park",
+        "bio": "Collecting small moments and trying something new.",
+        "avatar": "",
+        "private": false,
+        "verified": false,
+        "verifiedOnly": true,
+        "intention": "friends",
+        "demo": true,
+        "sample": true
+      },
+      "likes": 18,
+      "liked": false,
+      "comments": 0
+    }
+  ]
+}

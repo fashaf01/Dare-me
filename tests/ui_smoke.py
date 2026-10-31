@@ -8,11 +8,14 @@ from playwright.sync_api import sync_playwright, expect
 
 base = os.environ.get('APP_URL', 'http://127.0.0.1:5173')
 root = Path(__file__).resolve().parent.parent
+static_demo = os.environ.get('STATIC_DEMO') == '1'
 with sync_playwright() as p:
     chromium = os.environ.get('CHROMIUM_PATH') or shutil.which('chromium')
     browser = p.chromium.launch(**({'executable_path': chromium} if chromium else {}), args=['--no-sandbox'])
     page = browser.new_page(viewport={'width': 1440, 'height': 1000})
     errors = []
+    api_requests = []
+    page.on('request', lambda request: api_requests.append(request.url) if '/api/' in request.url else None)
     page.on('pageerror', lambda error: errors.append(str(error)))
     page.goto(base, wait_until='networkidle')
     expect(page.get_by_role('heading', name='Hello, Jordan')).to_be_visible()
@@ -61,7 +64,7 @@ with sync_playwright() as p:
     dialog.get_by_role('button', name='Make my profile public').click()
     expect(page.get_by_role('switch', name='Private account', exact=True)).to_have_attribute('aria-checked', 'false')
     page.reload(wait_until='networkidle')
-    result = page.evaluate("async () => (await (await fetch('/api/state')).json()).user")
+    result = page.evaluate("JSON.parse(localStorage.getItem('dareme-static-demo-v1')).state.user") if static_demo else page.evaluate("async () => (await (await fetch('/api/state')).json()).user")
     assert result['private'] is False and result['name'] == 'Casey Demo'
     print('PASS: profile editing, explicit public-profile confirmation, persistence')
 
@@ -88,11 +91,20 @@ with sync_playwright() as p:
     dialog.get_by_role('combobox').select_option(label='Unsafe or harmful content')
     dialog.get_by_role('button', name='Save report').click()
     expect(dialog.get_by_role('heading', name='You’ve taken a good step.')).to_be_visible()
-    expect(dialog.get_by_text('This prototype does not have a staffed moderation team.', exact=False)).to_be_visible()
+    expect(dialog.get_by_text('This is a demo only.' if static_demo else 'This prototype does not have a staffed moderation team.', exact=False)).to_be_visible()
     dialog.get_by_role('button', name='Back to my space').click()
     expect(page.locator('.post-card').filter(has_text='Jamie Chen')).to_have_count(0)
     print('PASS: reporting and immediate blocking')
     assert not errors, errors
+    if static_demo:
+        page.get_by_role('button', name='No-login demo', exact=True).click()
+        dialog = page.get_by_role('dialog')
+        expect(dialog.get_by_text('Nothing is sent to a server or another person.', exact=False)).to_be_visible()
+        expect(page.locator('input[type=password], input[type=email]')).to_have_count(0)
+        dialog.get_by_role('button', name='Reset the demo', exact=True).click()
+        expect(page.get_by_role('heading', name='Hello, Jordan')).to_be_visible()
+        assert api_requests == [], api_requests
+        print('PASS: no login forms, no backend requests, browser-only demo reset')
     page.close()
 
     # Fresh sessions for screenshots and responsive checks; no preview mutations are shared.

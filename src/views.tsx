@@ -24,6 +24,7 @@ import {
   Zap,
 } from "lucide-react";
 import { api, send } from "./api";
+import { DEMO_ONLY } from "./config";
 import {
   Avatar,
   EmptyState,
@@ -882,14 +883,18 @@ export function SettingsView({
           <div className="setting-row">
             <div>
               <h3>
-                {state.user.demo
-                  ? "Ready for your own little space?"
-                  : "Need a little break?"}
+                {DEMO_ONLY
+                  ? "A fresh little start?"
+                  : state.user.demo
+                    ? "Ready for your own little space?"
+                    : "Need a little break?"}
               </h3>
               <p>
-                {state.user.demo
-                  ? "Create a private account. Your preview content stays separate."
-                  : "Sign out on this browser. Your posts and preferences will be here when you return."}
+                {DEMO_ONLY
+                  ? "Reset sample posts, chats, and preferences on this device."
+                  : state.user.demo
+                    ? "Create a private account. Your preview content stays separate."
+                    : "Sign out on this browser. Your posts and preferences will be here when you return."}
               </p>
             </div>
             <button
@@ -898,7 +903,11 @@ export function SettingsView({
                 state.user.demo ? open({ kind: "auth" }) : onLogout()
               }
             >
-              {state.user.demo ? "Create an account" : "Sign out"}
+              {DEMO_ONLY
+                ? "Demo options"
+                : state.user.demo
+                  ? "Create an account"
+                  : "Sign out"}
               {state.user.demo ? (
                 <ArrowRight size={14} />
               ) : (
@@ -909,7 +918,9 @@ export function SettingsView({
         </section>
         <p className="settings-footnote">
           <ShieldCheck size={14} />
-          Your preferences are saved securely on this app’s server.
+          {DEMO_ONLY
+            ? "This demo saves preferences in your browser. No login or server needed."
+            : "Your preferences are saved securely on this app’s server."}
         </p>
       </div>
       {publicConfirm && (
@@ -964,11 +975,15 @@ export function SafetyView({ state, open, navigate }: AppActions) {
     },
     {
       q: "Who can see my photos?",
-      a: "For a private account, only you and approved followers can access your posts and uploaded photos. For a public account, signed-in members can see them. Other people may still capture or save anything you choose to share, so keep sensitive details out of posts.",
+      a: DEMO_ONLY
+        ? "Demo photos stay on this device and aren’t uploaded or shared. The public/private switch is a sample of how profile privacy works in the full app."
+        : "For a private account, only you and approved followers can access your posts and uploaded photos. For a public account, signed-in members can see them. Other people may still capture or save anything you choose to share, so keep sensitive details out of posts.",
     },
     {
       q: "What happens to a report?",
-      a: "Reports are stored on the server with a reference number. This first prototype does not have an actively staffed moderation team or emergency response service. A public launch needs human moderation, escalation procedures, and real age and identity checks.",
+      a: DEMO_ONLY
+        ? "Sample reports are recorded only in this browser. They aren’t sent to a moderation team. Use the reset option to clear all demo content."
+        : "Reports are stored on the server with a reference number. This first prototype does not have an actively staffed moderation team or emergency response service. A public launch needs human moderation, escalation procedures, and real age and identity checks.",
     },
   ];
   return (
@@ -1094,7 +1109,11 @@ export function SafetyView({ state, open, navigate }: AppActions) {
             open({ kind: state.user.demo ? "auth" : "verification" })
           }
         >
-          {state.user.demo ? "Explore with an account" : "About verification"}
+          {DEMO_ONLY
+            ? "About this demo"
+            : state.user.demo
+              ? "Explore with an account"
+              : "About verification"}
           <ArrowUpRight size={15} />
         </button>
       </div>

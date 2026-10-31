@@ -2,7 +2,25 @@
 
 A first working web app for thoughtful daily dares, friendship, and dating. Built with React, TypeScript, Vite, Express, and SQLite, with a responsive desktop and mobile interface.
 
-## Run locally
+## No-login GitHub Pages demo
+
+The `demo` build opens straight into a fictional sample account. It needs no login, backend, Railway account, API keys, or database server. Dares, sample chat, posts, filters, privacy controls, likes, comments, and reports work locally in the browser. Nothing is sent to another person or a server. Reset sample content using **No-login demo → Reset the demo**. Browser storage may be cleared by the browser; it is not a real account or a safety service.
+
+```sh
+npm ci
+npm run build:demo
+npm run preview:demo
+```
+
+The static files are in `dist-demo/`, configured for the repository path `/Dare-me/`, including fonts and photos. To check the static build with the optional browser suite:
+
+```sh
+APP_URL=http://127.0.0.1:4173/Dare-me/ STATIC_DEMO=1 npm run test:ui
+```
+
+`npm run deploy:demo` builds the demo and publishes only `dist-demo/` to the `gh-pages` branch using normal Git access. It never force-pushes or includes the private `.data` directory. In **GitHub repository Settings → Pages**, select **Deploy from a branch → gh-pages → /(root)** once. The expected site address is `https://fashaf01.github.io/Dare-me/`; that address is live only after GitHub Pages is enabled and its deployment succeeds. Future demo updates can be published with the same command. The full server-backed app remains available as the normal build.
+
+## Run locally (server-backed app)
 
 Requires **Node.js 24 or newer** and npm. No external database or API keys are required.
 

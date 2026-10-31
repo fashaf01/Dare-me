@@ -26,6 +26,7 @@ import {
   Zap,
 } from "lucide-react";
 import { api, send } from "./api";
+import { DEMO_ONLY } from "./config";
 import {
   Avatar,
   Brand,
@@ -63,7 +64,8 @@ export type Dialog =
         | "edit-profile"
         | "verification"
         | "notifications"
-        | "people";
+        | "people"
+        | "demo-info";
     }
   | { kind: "dare"; dare: Dare }
   | { kind: "profile"; user: User }
@@ -196,7 +198,10 @@ export default function App() {
     refresh,
     notify,
     navigate,
-    open: setDialog,
+    open: (next) =>
+      setDialog(
+        DEMO_ONLY && next.kind === "auth" ? { kind: "demo-info" } : next,
+      ),
     act,
   };
   const pending =
@@ -458,10 +463,13 @@ export default function App() {
               {state.user.demo ? (
                 <button
                   className="preview-pill"
-                  onClick={() => setDialog({ kind: "auth" })}
+                  onClick={() =>
+                    setDialog({ kind: DEMO_ONLY ? "demo-info" : "auth" })
+                  }
                 >
                   <span />
-                  Interactive preview <ArrowUpRight size={13} />
+                  {DEMO_ONLY ? "No-login demo" : "Interactive preview"}{" "}
+                  <ArrowUpRight size={13} />
                 </button>
               ) : (
                 <span className="member-pill">
@@ -671,7 +679,49 @@ export default function App() {
       {dialog?.kind === "new-post" && (
         <NewPostDialog {...actions} onClose={close} />
       )}
-      {dialog?.kind === "auth" && <AuthDialog {...actions} onClose={close} />}
+      {!DEMO_ONLY && dialog?.kind === "auth" && (
+        <AuthDialog {...actions} onClose={close} />
+      )}
+      {dialog?.kind === "demo-info" && (
+        <Modal
+          title="Take a little look around."
+          eyebrow="NO LOGIN. JUST A LITTLE CURIOSITY."
+          onClose={close}
+        >
+          <p className="dialog-intro">
+            Explore the feed, try both dares, open a sample chat, and make the
+            profile your own. All people and conversations are fictional.
+          </p>
+          <div className="subtle-note">
+            <ShieldCheck size={19} />
+            <p>
+              Changes, photos, and sample reports stay in this browser. Nothing
+              is sent to a server or another person. Please use sample content,
+              not sensitive information.
+            </p>
+          </div>
+          <button className="button primary full" onClick={close}>
+            Let me explore <ArrowRight size={16} />
+          </button>
+          <button
+            className="button light full"
+            onClick={async () => {
+              try {
+                await send("/demo/reset");
+                setSaved([]);
+                await refresh();
+                navigate("Explore");
+                close();
+                notify("A fresh little start. The demo has been reset.");
+              } catch (e) {
+                notify((e as Error).message);
+              }
+            }}
+          >
+            Reset the demo
+          </button>
+        </Modal>
+      )}
       {dialog?.kind === "dare" && (
         <DareDialog
           {...actions}

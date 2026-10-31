@@ -1,7 +1,13 @@
+import { DEMO_ONLY } from "./config";
+
 export async function api<T = { ok: boolean }>(
   path: string,
   options?: RequestInit,
 ): Promise<T> {
+  if (DEMO_ONLY) {
+    const { demoApi } = await import("./demo");
+    return demoApi<T>(path, options);
+  }
   const headers = new Headers(options?.headers);
   if (!(options?.body instanceof FormData))
     headers.set("Content-Type", "application/json");
